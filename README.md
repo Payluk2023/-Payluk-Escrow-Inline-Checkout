@@ -21,7 +21,6 @@ import { initEscrowCheckout, pay } from 'payluk-escrow-inline-checkout';
 
 // 1) Initialize once at app startup
 initEscrowCheckout({
-  apiBaseUrl: 'https://api.example.com', // your backend base URL
   publicKey: '<YOUR_PUBLISHABLE_KEY>' // publishable key only
 });
 
@@ -29,12 +28,11 @@ initEscrowCheckout({
 async function onPayClick() {
   try {
     await pay({
-      paymentToken: '<PAYMENT_TOKEN_FROM_YOUR_BACKEND_OR_PROVIDER>',
+      paymentToken: '<PAYMENT_TOKEN>',
       reference: '<ORDER_OR_REFERENCE_ID>',
       redirectUrl: 'https://your-app.example.com/checkout/complete',
       logoUrl: 'https://your-cdn.example.com/logo.png', // optional
       brand: 'YourBrand', // optional
-      extra: { theme: 'dark' }, // optional
       callback: (result) => {
         console.log('Checkout result:', result);
       },
@@ -51,12 +49,11 @@ async function onPayClick() {
 ## React Usage
 
 ```tsx
-// CheckoutButton.tsx
 import React from 'react';
 import { useEscrowCheckout } from 'payluk-escrow-inline-checkout/react';
 
 export function CheckoutButton() {
-  const { pay, loading, error, ready } = useEscrowCheckout();
+  const { pay } = useEscrowCheckout();
 
   const handleClick = async () => {
     try {
@@ -76,9 +73,7 @@ export function CheckoutButton() {
 
   return (
     <button onClick={handleClick} disabled={loading || !ready}>
-      {loading ? 'Processing…' : 'Pay now'}
-      {!ready && <span>Preparing checkout…</span>}
-      {error && <small style={{ color: 'red' }}>{error.message}</small>}
+      Pay Now
     </button>
   );
 }
@@ -97,7 +92,6 @@ export function CheckoutButton() {
 Initializes the SDK. Must be called before any `pay(...)`.
 
 **Required:**
-- `apiBaseUrl`: `string` — your backend base URL (no trailing slash required)
 - `publicKey`: `string` — publishable key only
 
 **Advanced (optional):**
@@ -111,11 +105,7 @@ Initializes the SDK. Must be called before any `pay(...)`.
 import { initEscrowCheckout } from 'payluk-escrow-inline-checkout';
 
 initEscrowCheckout({
-  apiBaseUrl: 'https://api.example.com',
-  publicKey: '<YOUR_PUBLISHABLE_KEY>',
-  // scriptUrlOverride: 'https://cdn.example.com/custom-widget.js',
-  // globalName: 'EscrowCheckout',
-  // crossOrigin: 'anonymous'
+  publicKey: '<YOUR_PUBLISHABLE_KEY>'
 });
 ```
 
@@ -131,7 +121,6 @@ Creates a checkout session via your backend and opens the widget.
 **Optional:**
 - `logoUrl?`: `string`
 - `brand?`: `string`
-- `extra?`: `Record<string, unknown>`
 - `callback?`: `(result: unknown) => void`
 - `onClose?`: `() => void`
 
