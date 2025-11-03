@@ -49,6 +49,32 @@ async function onPayClick() {
 ## React Usage
 
 ```tsx
+import { initEscrowCheckout } from 'payluk-escrow-inline-checkout';
+
+export default function ClientEscrowInit() {
+    useEffect(() => {
+        initEscrowCheckout({
+            publicKey: 'pk_live_*************************',
+        });
+    }, []);
+    return null;
+}
+```
+
+```tsx
+export default function RootLayout({ children }: Readonly<{children: React.ReactNode}>) {
+    return (
+        <html lang="en">
+            <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+                <ClientEscrowInit />
+                {children}
+            </body>
+        </html>
+    );
+}
+```
+
+```tsx
 import React from 'react';
 import { useEscrowCheckout } from 'payluk-escrow-inline-checkout/react';
 
@@ -72,7 +98,7 @@ export function CheckoutButton() {
   };
 
   return (
-    <button onClick={handleClick} disabled={loading || !ready}>
+    <button onClick={handleClick}>
       Pay Now
     </button>
   );
@@ -150,7 +176,7 @@ import { useEscrowCheckout } from 'payluk-escrow-inline-checkout/react';
 ## Error Handling
 
 Common issues:
-- **Not initialized:** Ensure `initEscrowCheckout({ apiBaseUrl, publicKey })` is called before `pay(...)`.
+- **Not initialized:** Ensure `initEscrowCheckout({ publicKey })` is called before `pay(...)`.
 - **Browser-only:** Do not call `pay(...)` on the server.
 - **Network/API errors:** If the session endpoint fails, `pay(...)` will reject with the error message from your backend (if any).
 
