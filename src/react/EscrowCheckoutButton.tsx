@@ -2,7 +2,10 @@ import React, { useCallback } from 'react';
 import { useEscrowCheckout } from './useEscrowCheckout';
 
 export interface EscrowCheckoutButtonProps {
-    paymentToken: string;
+    /**
+     * Single escrow payment token or array of payment tokens for multi-escrow checkout.
+     */
+    paymentToken: string | string[];
     reference: string;
     redirectUrl: string;
     children?: React.ReactNode;

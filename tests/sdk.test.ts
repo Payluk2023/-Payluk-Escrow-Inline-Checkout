@@ -74,6 +74,68 @@ describe('payluk-escrow-inline-checkout errors', () => {
         );
     });
 
+    it('rejects empty array paymentToken', async () => {
+        const { initEscrowCheckout, pay, EscrowCheckoutError } = await importSdk();
+        setWindowWithWidget();
+        initEscrowCheckout({ publicKey: 'pk_test_123' });
+
+        await expectEscrowError(
+            () =>
+                pay({
+                    paymentToken: [],
+                    reference: 'ref',
+                    redirectUrl: 'https://example.com'
+                }),
+            'INVALID_INPUT',
+            EscrowCheckoutError
+        );
+    });
+
+    it('rejects array with empty strings', async () => {
+        const { initEscrowCheckout, pay, EscrowCheckoutError } = await importSdk();
+        setWindowWithWidget();
+        initEscrowCheckout({ publicKey: 'pk_test_123' });
+
+        await expectEscrowError(
+            () =>
+                pay({
+                    paymentToken: ['token1', '', 'token3'],
+                    reference: 'ref',
+                    redirectUrl: 'https://example.com'
+                }),
+            'INVALID_INPUT',
+            EscrowCheckoutError
+        );
+    });
+
+    it('accepts array of valid payment tokens', async () => {
+        const { initEscrowCheckout, pay } = await importSdk();
+        setWindowWithWidget();
+        initEscrowCheckout({ publicKey: 'pk_test_123' });
+
+        globalThis.fetch = vi.fn(async () => {
+            return {
+                ok: true,
+                status: 200,
+                json: async () => ({ session: { id: 'session_123' } })
+            } as Response;
+        }) as typeof fetch;
+
+        await pay({
+            paymentToken: ['token1', 'token2', 'token3'],
+            reference: 'ref',
+            redirectUrl: 'https://example.com'
+        });
+
+        expect(globalThis.fetch).toHaveBeenCalledWith(
+            expect.stringContaining('/v1/checkout/session'),
+            expect.objectContaining({
+                method: 'POST',
+                body: expect.stringContaining('["token1","token2","token3"]')
+            })
+        );
+    });
+
     it('surfaces session creation errors with status', async () => {
         const { initEscrowCheckout, pay, EscrowCheckoutError } = await importSdk();
         setWindowWithWidget();

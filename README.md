@@ -6,6 +6,7 @@ A lightweight client SDK that initializes your checkout configuration, creates a
 - Promise-based API.
 - First-class TypeScript types.
 - Optional React hook with loading/error state.
+- Multi-escrow support: pay for multiple escrows in a single checkout session.
 
 ## Installation
 
@@ -178,6 +179,106 @@ export function CheckoutButton() {
 - Only use publishable keys in the browser. Keep any secret keys on your server.
 - Validate inputs on your backend and return the required session payload.
 
+## Multi-Escrow Payments
+
+You can now pay for multiple escrows in a single checkout session by passing an array of payment tokens. This is useful when a customer wants to pay for multiple items or services at once.
+
+### Requirements
+
+- All escrows must belong to the same merchant
+- All escrows must be in `PENDING` status
+- If using merchant escrows, a `customerId` is required
+- The total amount from all escrows will be charged in a single transaction
+
+### Vanilla JS/TS Example
+
+```ts
+import { initEscrowCheckout, pay } from 'payluk-escrow-inline-checkout';
+
+// Initialize once
+initEscrowCheckout({
+  publicKey: '<YOUR_PUBLISHABLE_KEY>'
+});
+
+// Pay for multiple escrows
+async function onPayMultipleClick() {
+  try {
+    await pay({
+      // Pass an array of payment tokens
+      paymentToken: ['TOKEN_1', 'TOKEN_2', 'TOKEN_3'],
+      reference: '<REFERENCE_ID>',
+      redirectUrl: 'https://your-app.example.com/checkout/complete',
+      logoUrl: 'https://mediacloud.me/media/W8HU9TK245QF528ZULCFSJXX2SBBLT.jpg',
+      brand: 'YourBrand',
+      customerId: 'customer_123', // Required for merchant escrows
+      callback: (result) => {
+        // result.paymentId will contain comma-separated IDs: "id1,id2,id3"
+        // result.reference will contain unique refs: "REF_1,REF_2,REF_3"
+        console.log('Multi-escrow checkout result:', result);
+      },
+      onClose: () => {
+        console.log('Widget closed');
+      }
+    });
+  } catch (err) {
+    console.error('Payment failed:', err);
+  }
+}
+```
+
+### React Example
+
+```tsx
+import React from 'react';
+import { useEscrowCheckout } from 'payluk-escrow-inline-checkout/react';
+
+export function MultiEscrowCheckoutButton() {
+  const { pay } = useEscrowCheckout();
+
+  const handleClick = async () => {
+    try {
+      await pay({
+        // Array of payment tokens for multi-escrow checkout
+        paymentToken: ['TOKEN_1', 'TOKEN_2', 'TOKEN_3'],
+        reference: '<REFERENCE_ID>',
+        redirectUrl: 'https://your-app.example.com/checkout/complete',
+        customerId: 'customer_123',
+        callback: (result) => {
+          console.log('Payment successful:', result);
+        }
+      });
+    } catch (err) {
+      console.error('Payment failed:', err);
+    }
+  };
+
+  return (
+    <button onClick={handleClick}>
+      Pay for Multiple Items
+    </button>
+  );
+}
+```
+
+### How It Works
+
+1. **Individual Processing**: Each escrow is processed individually with its own payment intent
+2. **Aggregated Total**: The checkout widget displays the total amount from all escrows
+3. **Unique References**: Multi-payments generate unique references for each escrow (e.g., `REF_1`, `REF_2`, `REF_3`)
+4. **Single Transaction**: The customer completes one payment for all escrows combined
+5. **Backward Compatible**: Single payment tokens (strings) still work exactly as before
+
+### Response Format
+
+When using multi-escrow payments, the callback receives:
+
+```ts
+{
+  paymentId: "token1,token2,token3",  // Comma-separated escrow IDs
+  reference: "REF_1,REF_2,REF_3"      // Comma-separated unique references
+}
+```
+
 ## API
 
 ### `initEscrowCheckout(config)`
@@ -207,19 +308,26 @@ initEscrowCheckout({
 Creates a checkout session via your backend and opens the widget.
 
 **Required:**
-- `paymentToken`: `string`
+- `paymentToken`: `string | string[]` — single payment token or array of tokens for multi-escrow checkout
 - `reference`: `string`
 - `redirectUrl`: `string`
 
 **Optional:**
 - `logoUrl?`: `string`
-- `customerId?`: `string` — only for merchants using customer vaulting
+- `customerId?`: `string` — required for merchant escrows, optional for business escrows
 - `brand?`: `string`
 - `callback?`: `(result: unknown) => void`
 - `onClose?`: `() => void`
+- `extra?`: `Record<string, unknown>` — additional widget configuration
 
 **Returns:**
 - `Promise<void>` that resolves when the widget is opened (and rejects on errors).
+
+**Multi-Escrow Notes:**
+- When using an array of payment tokens, all escrows must belong to the same merchant
+- The checkout widget will display the aggregated total amount
+- Each escrow is processed individually with its own payment intent
+- Empty arrays or arrays containing empty strings will be rejected
 
 ### `useEscrowCheckout(): { ready, loading, error, pay }`
 

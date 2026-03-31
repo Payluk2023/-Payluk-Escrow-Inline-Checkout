@@ -34,7 +34,11 @@ export interface InitConfig {
 }
 
 export interface PayInput {
-    paymentToken: string;
+    /**
+     * Single escrow payment token or array of payment tokens for multi-escrow checkout.
+     * When providing multiple tokens, they must all belong to the same merchant.
+     */
+    paymentToken: string | string[];
     reference: string;
     redirectUrl: string;
     logoUrl?: string;
@@ -99,6 +103,20 @@ function normalizeError(error: unknown): Error {
 
 function isNonEmptyString(value: unknown): value is string {
     return typeof value === 'string' && value.trim().length > 0;
+}
+
+function isValidPaymentToken(value: unknown): value is string | string[] {
+    // Check if it's a valid string
+    if (isNonEmptyString(value)) {
+        return true;
+    }
+
+    // Check if it's a valid array of strings
+    if (Array.isArray(value)) {
+        return value.length > 0 && value.every((token) => isNonEmptyString(token));
+    }
+
+    return false;
 }
 
 function isSessionResponse(value: unknown): value is SessionResponse {
@@ -239,8 +257,11 @@ export async function pay(input: PayInput): Promise<void> {
     }
 
     assertConfigured(CONFIG);
-    if (!input || !isNonEmptyString(input.paymentToken)) {
-        throw new EscrowCheckoutError('pay(...) requires "paymentToken".', 'INVALID_INPUT');
+    if (!input || !isValidPaymentToken(input.paymentToken)) {
+        throw new EscrowCheckoutError(
+            'pay(...) requires "paymentToken" (must be a non-empty string or array of non-empty strings).',
+            'INVALID_INPUT'
+        );
     }
     if (!isNonEmptyString(input.reference)) {
         throw new EscrowCheckoutError('pay(...) requires "reference".', 'INVALID_INPUT');

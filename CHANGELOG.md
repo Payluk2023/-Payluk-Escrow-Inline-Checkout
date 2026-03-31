@@ -5,6 +5,56 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-03-31
+
+### Added
+- **Multi-Escrow Payments**: Support for paying multiple escrows in a single checkout session
+  - `paymentToken` now accepts both `string` and `string[]` types
+  - Added comprehensive validation for array inputs (non-empty arrays, valid string elements)
+  - Updated `PayInput` interface with backward-compatible changes
+  - Updated `EscrowCheckoutButtonProps` to support array of payment tokens
+  - All escrows must belong to the same merchant
+  - Individual processing for each escrow with aggregated total display
+  - Unique references generated for multi-payments (e.g., `REF_1`, `REF_2`, `REF_3`)
+
+### Changed
+- Enhanced input validation to handle both single and multiple payment tokens
+- Updated error messages to reflect new validation rules
+- Improved TypeScript type definitions with JSDoc comments for `paymentToken` parameter
+- Documentation now includes comprehensive multi-escrow usage examples for both vanilla JS/TS and React
+
+### Added Tests
+- Test cases for empty array validation
+- Test cases for arrays with empty/whitespace strings
+- Test cases for valid array of payment tokens
+- Verification of correct API payload format for multi-escrow requests
+
+### Migration Guide
+The update is fully backward compatible. Existing implementations using a single `paymentToken` string will continue to work without any changes.
+
+To use multi-escrow payments:
+
+**Vanilla JS/TS:**
+```ts
+await pay({
+  paymentToken: ['TOKEN_1', 'TOKEN_2', 'TOKEN_3'], // Array instead of string
+  reference: '<REFERENCE_ID>',
+  redirectUrl: 'https://your-app.example.com/checkout/complete',
+  customerId: '<CUSTOMER_ID>', // Required for merchant escrows
+  // ... other options
+});
+```
+
+**React:**
+```tsx
+<EscrowCheckoutButton
+  paymentToken={['TOKEN_1', 'TOKEN_2', 'TOKEN_3']} // Array instead of string
+  reference="<REFERENCE_ID>"
+  redirectUrl="https://your-app.example.com/checkout/complete"
+  customerId="<CUSTOMER_ID>"
+/>
+```
+
 ## [0.2.6] - 2025-12-06
 
 ### Added
