@@ -208,8 +208,6 @@
         brand: 'YourBrand',
         customerId: 'customer_123', // Required for merchant escrows
         callback: (result) => {
-          // result.paymentId is comma-separated when multiple escrows are paid: "id1,id2,id3"
-          // result.reference is comma-separated when multiple escrows are paid: "REF_1,REF_2,REF_3"
           console.log('Checkout result:', result);
         },
         onClose: () => {
