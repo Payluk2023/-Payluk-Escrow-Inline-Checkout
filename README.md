@@ -267,7 +267,6 @@
   ```ts
   {
     paymentId: "token1,token2,token3",  // Comma-separated escrow IDs
-    reference: "REF_1,REF_2,REF_3"      // Comma-separated unique references
   }
   ```
 
